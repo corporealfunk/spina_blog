@@ -1,0 +1,11 @@
+%li.dd-item
+  .dd-item-inner
+    = link_to spina.edit_admin_post_path(post), class: 'button button-link button-small sortable-link' do
+      = post.title
+    - display_time = post.is_draft? ? post.updated_at : post.published_at
+    = link_to '', spina.edit_admin_post_path(post), { class: 'button button-link button-small sortable-link published_date', data: { time: display_time.iso8601 } }
+    %span.pull-right
+      = link_to spina.edit_admin_post_path(post), class: 'button button-small button-default dd-nodrag' do
+        .button-content
+          = icon('pencil-outline')
+          = t('spina.edit')

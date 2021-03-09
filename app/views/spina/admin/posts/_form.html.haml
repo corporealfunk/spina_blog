@@ -1,36 +1,76 @@
+- if @post.errors.any?
+  - content_for :notifications do
+    .notification.notification-danger.animated.fadeInLeft
+      = icon('exclamation')
+      .notification-message
+        =t 'spina.notifications.alert'
+        %small= @post.errors.full_messages.join('<br />').html_safe
+      = link_to '#', data: {close_notification: true} do
+        = icon('cross')
+
 = form_for [:admin, @post], html: { autocomplete: "off" } do |f|
-  #page_content
-    .table-container
-      %table.table.table-form
-        %tr
-          %td Title
-          %td= f.text_field :title
-        %tr
-          %td
-            Tags
-            %span.help-text Separate tags with ','
-          %td= f.text_field :tag_list
-        %tr
-          %td Body
-          %td= render '/spina/admin/shared/rich_text_field', f: f, field: :body
-        %tr
-          - published_at = (@post.new_record? || @post.is_draft?) ? nil : @post.published_at.iso8601
-          %td.published_date{ 'data-time': published_at } Published date
-          %td
-            = f.text_field :publish_date, value: '', class: 'datepicker-blog'
-            = f.time_field :publish_time, value: ''
-            = f.hidden_field :timezone
-        %tr
-          %td Draft?
-          %td= f.check_box :is_draft
+  %header#header
+    .breadcrumbs
+      = render_breadcrumbs separator: '<div class="divider"></div>'
+      %span{style: 'margin-left: 10px'}
+        - unless @post.new_record?
+          = link_to blog_post_path(@post.materialized_path), target: :blank, class: 'button button-default button-small', style: 'margin-left: 0' do
+            %i.icon.icon-export{style: 'margin: 0'}
 
-    %button.button.button-primary{type: 'submit', data: {icon: 'o'}}
-      Save
+    #header_actions
+      %button.button.button-primary{type: 'submit', style: 'margin-right: 0', data: {disable_with: t('spina.pages.saving')}}
+        = icon('check')
+        Save Post
 
-    = link_to 'Cancel', admin_posts_path, class: 'button button-link'
+    %nav#secondary.tabs
+      %ul
+        - @tabs.each_with_index do |tab, i|
+          %li{class: (i==0 ? 'active' : '')}
+            = link_to tab.humanize, "##{tab}"
+
+  #content.tab-content.active
+    .page-form
+      .page-form-group
+        .page-form-label Title
+        .page-form-control
+          = f.text_field :title
+      .page-form-group
+        .page-form-label Tags
+        .page-form-control
+          = f.text_field :tag_list, placeholder: 'Separate with commas'
+      .page-form-group
+        .page-form-label Content
+        .page-form-control
+          = render '/spina/admin/shared/rich_text_field', f: f, field: :body
+      .page-form-group
+        - published_at = (@post.new_record? || @post.is_draft?) ? nil : @post.published_at.iso8601
+        .page-form-label.published_date{ 'data-time': published_at } Published Date
+        .page-form-control
+          = f.text_field :publish_date, value: '', class: 'datepicker-blog'
+          = f.time_field :publish_time, value: ''
+          = f.hidden_field :timezone
+
+      - unless @post.new_record? || @post.is_draft?
+        .page-form-group
+          .page-form-label
+            URL Path
+          .page-form-control
+            = f.text_field :materialized_path
 
     - unless @post.new_record?
-      .pull-right= link_to 'Delete', admin_post_path(@post), method: :delete, confirm: 'Are you sure?', class: 'button button-link button-danger'
+      .text-right{style: "margin-top: 60px"}
+        = link_to t('spina.permanently_delete'), spina.admin_post_path(@post), method: :delete, data: {confirm: t('spina.pages.delete_confirmation', subject: @post.title)}, class: 'button button-default button-small button-danger', style: 'margin: 0'
+
+  #advanced.tab-content
+    .horizontal-form
+      %div{style: "margin: 40px 0"}
+        .horizontal-form-group
+          .horizontal-form-label
+            = Spina::Page.human_attribute_name :draft
+            %small= Spina::Page.human_attribute_name :draft_description
+          .horizontal-form-content
+            = f.check_box :is_draft, data: {switch: true}
+
 :javascript
   (function() {
     $('.datepicker-blog').datepicker({

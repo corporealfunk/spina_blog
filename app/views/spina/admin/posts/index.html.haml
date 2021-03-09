@@ -1,65 +1,40 @@
 - content_for :application do
   %header#header
     #header_actions
-      = link_to 'New post', spina.new_admin_post_path, class: 'button button-primary', data: {icon: 't'}
+      = link_to spina.new_admin_post_path, class: 'button button-primary', style: 'margin-right: 0' do
+        .button-content
+          = icon('plus')
+          New Post
 
     .breadcrumbs= render_breadcrumbs separator: '<div class="divider"></div>'
 
-  %h3 Posts
+  %p
+    %h4 Published
+  .well
+    .dd#pages_list
+      - if @posts.published.any?
+        %ol.dd-list
+          - @posts.published.each do |post|
+            = render partial: 'page', locals: { post: post }
+      - else
+        %ol.dd-list
+          %li.dd-item
+            .dd-item-inner
+              %em no posts found
+  %p
+    %h4 Drafts
+  .well
+    .dd#pages_list
+      - if @posts.drafts.any?
+        %ol.dd-list
+          - @posts.drafts.each do |post|
+            = render partial: 'page', locals: { post: post }
+      - else
+        %ol.dd-list
+          %li.dd-item
+            .dd-item-inner
+              %em no drafts found
 
-  .table-container
-    %table.table
-      %thead
-        %tr
-          %th Title
-          %th Date
-          %th &nbsp;
-
-      %tbody
-        - if @posts.published.any?
-          - @posts.each do |post|
-            %tr
-              %td
-                = post.title
-              - published_at = post.published_at ? post.published_at : nil
-              %td.published_date{ 'data-time': published_at.iso8601 }
-              %td.nowrap.align-right
-                = link_to spina.edit_admin_post_path(post), class: 'button button-link' do
-                  = icon('pencil-outline')
-                -# .pull-right= link_to 'Delete', admin_post_path(post), method: :delete, confirm: 'Are you sure?', class: 'button button-link button-danger'
-        - else
-          %tr
-            %td.align-center{colspan: 3}
-              %em There are no posts
-
-  %h3 Drafts
-
-  .table-container
-    %table.table
-      %thead
-        %tr
-          %th Title
-          %th Last Updated
-          %th &nbsp;
-
-      %tbody
-        - if @posts.drafts.any?
-          - @posts.each do |post|
-            %tr
-              %td
-                = post.title
-              - published_at = post.updated_at ? post.updated_at : nil
-              %td.published_date{ 'data-time': updated_at.iso8601 }
-              %td.nowrap.align-right
-                = link_to spina.edit_admin_post_path(post), class: 'button button-link' do
-                  = icon('pencil-outline')
-                .pull-right
-                  = link_to admin_post_path(post), method: :delete, confirm: 'Are you sure?', class: 'button button-link button-danger' do
-                    = icon('cross')
-        - else
-          %tr
-            %td.align-center{colspan: 3}
-              %em There are no drafts
   :javascript
     (function() {
       $('.published_date').each(function(i, el) {

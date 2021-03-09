@@ -6,7 +6,6 @@ module Spina
 
     def show
       @post = Post.published.find_by(materialized_path: params[:id])
-      # @post = Post.find(params[:id])
     end
 
     def preview

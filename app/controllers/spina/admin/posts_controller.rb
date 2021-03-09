@@ -43,7 +43,14 @@ module Spina
       private
 
       def post_params
-        params.require(:post).permit(:title, :body, :tag_list, :publish_date, :publish_time, :is_draft)
+        incoming = params.require(:post).permit(:title, :body, :tag_list, :is_draft, :timezone)
+
+        publish_date = params[:post][:publish_date].present? ? params[:post][:publish_date] : nil
+        publish_time = params[:post][:publish_time].present? ? params[:post][:publish_time] : nil
+        incoming.merge(
+          publish_date: publish_date,
+          publish_time: publish_time,
+        )
       end
 
       def set_breadcrumb

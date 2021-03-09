@@ -3,12 +3,16 @@ class Spina::Post < ApplicationRecord
   belongs_to :author, class_name: 'Spina::User', foreign_key: 'author_id'
   has_and_belongs_to_many :tags
 
+  attr_accessor :timezone
+
+  validates :title, presence: true
+
   # Published posts only (for front-end). Reverse order, since that's what we
   # need in the majority of cases.
   scope :published, -> { where(is_draft: false).order(published_at: :desc) }
   # Drafts for the admin section and previewing.
   scope :drafts, -> { where(is_draft: true) }
-  
+
   before_save :set_published_at, :set_materialized_path, :set_tags
   after_find :set_publish_date_and_time, :load_tags
 
@@ -35,12 +39,14 @@ class Spina::Post < ApplicationRecord
   # * If the publish_date is set, use this plus the publish_time, defaulting to midnight.
   def set_published_at
     return if self.is_draft?
-    if @publish_date.nil?
-      self.published_at = DateTime.now
-    else
-      years, months, days = @publish_date.split('-').map { |x| x.to_i }
-      hours, minutes = (@publish_time || "00:00").split(':').map { |x| x.to_i }
-      self.published_at = DateTime.new(years, months, days, hours, minutes)
+    Time.use_zone(@timezone) do
+      if !@publish_date
+        self.published_at = Time.now.utc
+      else
+        years, months, days = @publish_date.split('-').map { |x| x.to_i }
+        hours, minutes = (@publish_time || "00:00").split(':').map { |x| x.to_i }
+        self.published_at = Time.new(years, months, days, hours, minutes).utc
+      end
     end
   end
 
@@ -59,7 +65,7 @@ class Spina::Post < ApplicationRecord
   def set_materialized_path
     if self.is_draft?
       self.materialized_path = [
-        DateTime.now.strftime('%Y%m%d%H%M%s'),
+        Time.zone.now.strftime('%Y%m%d%H%M%s'),
         self.title.parameterize
       ].join('_')
     else
@@ -70,5 +76,4 @@ class Spina::Post < ApplicationRecord
       ].join('/')
     end
   end
-
 end

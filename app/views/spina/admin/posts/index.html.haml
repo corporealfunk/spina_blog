@@ -21,8 +21,8 @@
             %tr
               %td
                 = post.title
-              %td
-                = post.published_at.strftime('%a, %d %b %Y, %I:%M %p')
+              - published_at = post.published_at ? post.published_at : nil
+              %td.published_date{ 'data-time': published_at.iso8601 }
               %td.nowrap.align-right
                 = link_to spina.edit_admin_post_path(post), class: 'button button-link' do
                   = icon('pencil-outline')
@@ -48,8 +48,8 @@
             %tr
               %td
                 = post.title
-              %td
-                = post.updated_at.strftime('%a, %d %b %Y, %I:%M %p')
+              - published_at = post.updated_at ? post.updated_at : nil
+              %td.published_date{ 'data-time': updated_at.iso8601 }
               %td.nowrap.align-right
                 = link_to spina.edit_admin_post_path(post), class: 'button button-link' do
                   = icon('pencil-outline')
@@ -60,3 +60,14 @@
           %tr
             %td.align-center{colspan: 3}
               %em There are no drafts
+  :javascript
+    (function() {
+      $('.published_date').each(function(i, el) {
+        var $el = $(el);
+        var publishedAt = $(el).data('time');
+        if (publishedAt) {
+          var d = new Date(publishedAt);
+          $el.html(d.toDateString() + ' ' + d.toLocaleTimeString());
+        }
+      });
+    })();
